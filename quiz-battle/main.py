@@ -1,16 +1,16 @@
-# This is a sample Python script.
+from fastapi import FastAPI
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+app = FastAPI()
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await websocket.send_text(f"Server received: {message}")
+    except WebSocketDisconnect:
+        print("WebSocket connection closed")
