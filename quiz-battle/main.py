@@ -14,21 +14,65 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, payload: dict):
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.send_json(payload)
+
+    def connection_count(self) -> int:
+        return len(self.active_connections)
 
 manager = ConnectionManager()
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/ws/{nickname}")
+async def websocket_endpoint(websocket: WebSocket, nickname: str):
     await manager.connect(websocket)
+
+    await manager.broadcast(
+        {
+            "type": "user.joined",
+            "data": {
+                "nickname": nickname,
+                "online_count": manager.connection_count(),
+            }
+        }
+    )
 
     try:
         while True:
-            message = await websocket.receive_text()
-            await manager.broadcast(message)
+            payload = await websocket.receive_json()
+
+            if payload.get("type") != "chat.message":
+                continue
+
+            data = payload.get("data")
+
+            if not isinstance(data, dict):
+                continue
+
+            message = data.get("message")
+
+            if not isinstance(message, str) or not message.strip():
+                continue
+
+            await manager.broadcast(
+                {
+                    "type": "chat.message",
+                    "data": {
+                        "sender": nickname,
+                        "message": message.strip(),
+                    }
+                }
+            )
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        await manager.broadcast(
+            {
+                "type": "user.left",
+                "data": {
+                    "nickname": nickname,
+                    "online_count": manager.connection_count(),
+                }
+            }
+        )
         print("WebSocket connection closed")
