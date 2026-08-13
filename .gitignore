@@ -1,0 +1,38 @@
+# 저장소 전체 공통 규칙
+# (algorithm / basic / expense-tracker / quiz-battle 에 모두 적용)
+
+# Python 바이트코드
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 가상환경 (uv sync 로 재생성)
+.venv/
+venv/
+
+# 빌드 산출물
+build/
+dist/
+*.egg-info/
+
+# 테스트 / 린터 캐시
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# 환경변수
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 에디터 임시 파일
+*.swp
+*~
